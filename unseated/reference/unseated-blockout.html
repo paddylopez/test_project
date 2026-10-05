@@ -1,0 +1,530 @@
+<title>Unseated Map Blockout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a level-design sheet in the same survey style as the Crash page. Concept and figures up top, then the plan with a level filter, two sections, and reference tables. */
+:root {
+  --bg: #e8ece6;
+  --panel: #f3f5f1;
+  --ink: #18221d;
+  --ink-2: #4a574f;
+  --muted: #6b776f;
+  --rule: #c9d1c9;
+  --grid: #dde3dc;
+  --t-floor: #d2ded7;
+  --t-board: #9cc0b3;
+  --t-deck: #3f7f6e;
+  --t-deck-ink: #f3f5f1;
+  --team-a: #2a78d6;
+  --team-b: #eb6834;
+  --hatch: #8a958d;
+  --font-display: "Big Shoulders Stencil Display", "Arial Narrow", Impact, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121815; --panel: #19211d; --ink: #e2e8e1; --ink-2: #a9b5ac; --muted: #89958c;
+    --rule: #2c3731; --grid: #212a25;
+    --t-floor: #26332d; --t-board: #335f53; --t-deck: #78b5a2; --t-deck-ink: #121815;
+    --team-a: #3987e5; --team-b: #d95926; --hatch: #5d6a62;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121815; --panel: #19211d; --ink: #e2e8e1; --ink-2: #a9b5ac; --muted: #89958c;
+  --rule: #2c3731; --grid: #212a25;
+  --t-floor: #26332d; --t-board: #335f53; --t-deck: #78b5a2; --t-deck-ink: #121815;
+  --team-a: #3987e5; --team-b: #d95926; --hatch: #5d6a62;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; display: grid; gap: 40px; }
+@media (max-width: 480px) { .wrap { padding-inline: 16px; } }
+header { display: grid; gap: 10px; }
+.eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(48px, 9vw, 92px); line-height: 0.9; letter-spacing: 0.01em; margin: 0; }
+.lead { max-width: 66ch; margin: 0; color: var(--ink-2); font-size: 16.5px; }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: 30px; letter-spacing: 0.02em; margin: 0; line-height: 1; text-wrap: balance; }
+h3 { font: 600 12px/1.2 var(--font-data); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+p { margin: 0; }
+.prose { max-width: 68ch; display: grid; gap: 10px; color: var(--ink-2); }
+.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+section { display: grid; gap: 16px; }
+.section-head { display: grid; gap: 8px; }
+
+.figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule); }
+.fig { padding: 14px 16px 16px 0; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.fig + .fig { padding-left: 16px; border-left: 1px solid var(--rule); }
+.fig .label { font-family: var(--font-data); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.fig .value { font-family: var(--font-data); font-weight: 500; font-size: clamp(21px, 2.5vw, 27px); line-height: 1.15; font-variant-numeric: tabular-nums; }
+.fig .sub { font-size: 13.5px; color: var(--ink-2); }
+@media (max-width: 820px) {
+  .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fig:nth-child(3) { padding-left: 0; border-left: 0; }
+  .fig:nth-child(n+3) { border-top: 1px solid var(--rule); }
+}
+
+.levels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; background: var(--panel); }
+.level { padding: 14px 16px; display: grid; gap: 6px; align-content: start; min-width: 0; border-left: 1px solid var(--rule); }
+.level:first-child { border-left: 0; }
+.level .chipline { display: flex; align-items: center; gap: 8px; }
+.level .sw { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--rule); flex: none; }
+.level .name { font-weight: 600; color: var(--ink); }
+.level .h { font-family: var(--font-data); font-size: 13px; color: var(--muted); }
+.level p { font-size: 14px; color: var(--ink-2); }
+@media (max-width: 760px) { .levels { grid-template-columns: minmax(0, 1fr); } .level { border-left: 0; border-top: 1px solid var(--rule); } .level:first-child { border-top: 0; } }
+
+.sheet { background: var(--panel); border: 1px solid var(--rule); border-radius: 4px; padding: 12px; display: grid; gap: 10px; min-width: 0; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.ctl-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ctl-label { font-family: var(--font-data); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+.chip { font: 500 13px/1 var(--font-body); color: var(--ink-2); background: transparent; border: 1px solid var(--rule); border-radius: 999px; padding: 7px 11px; cursor: pointer; }
+.chip:hover { border-color: var(--ink-2); color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--panel); }
+.chip:focus-visible { outline: 2px solid var(--team-a); outline-offset: 2px; }
+.scroll-x { overflow-x: auto; position: relative; }
+.plan-svg { display: block; width: 100%; min-width: 760px; height: auto; }
+.sec-svg { display: block; width: 100%; min-width: 760px; height: auto; }
+.hint { font-size: 13px; color: var(--muted); }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--panel); font: 12.5px/1.35 var(--font-body); padding: 6px 8px; border-radius: 3px; max-width: 280px; transform: translate(-50%, calc(-100% - 12px)); z-index: 2; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.lg { width: 16px; height: 12px; border-radius: 2px; border: 1px solid var(--rule); display: inline-block; }
+
+[data-dim="true"] { opacity: 0.18; }
+.plan-svg [data-tier] { transition: opacity 160ms ease; }
+@media (prefers-reduced-motion: reduce) { .plan-svg [data-tier] { transition: none; } }
+
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font: 600 11.5px/1.2 var(--font-data); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+td small { display: block; color: var(--muted); font-size: 12.5px; }
+td.num, th.num { white-space: nowrap; }
+.table-scroll { overflow-x: auto; }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 860px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; color: var(--ink-2); font-size: 14.5px; }
+ul.plain b { color: var(--ink); font-weight: 600; }
+.notes { border-top: 1px solid var(--rule); padding-top: 18px; display: grid; gap: 10px; font-size: 13.5px; color: var(--ink-2); max-width: 80ch; }
+.notes h2 { font-size: 22px; color: var(--ink); }
+a { color: var(--ink); text-decoration-color: var(--team-a); text-underline-offset: 2px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Level concept · working title · 357× scale · 5 mm player</div>
+    <h1>Unseated</h1>
+    <p class="lead">The tower took a hit. The graphics card ripped out of its slot and landed fans-up on the PSU shroud, and the impact tore its middle fan section clean off. What's left is a three-lane map on three levels: floor lanes either side of the card, a crater of exposed circuit board in the middle, and two surviving fan decks up high at each end.</p>
+  </header>
+
+  <div class="figures" role="list">
+    <div class="fig" role="listitem"><div class="label">Footprint</div><div class="value">129 × 68 m</div><div class="sub">longer than Crash (109 × 69 m), same width</div></div>
+    <div class="fig" role="listitem"><div class="label">Scale</div><div class="value">1 mm = 0.36 m</div><div class="sub">about 14 engine units per real millimetre</div></div>
+    <div class="fig" role="listitem"><div class="label">Levels</div><div class="value">0 · 1.8 · 14.3 m</div><div class="sub">floor, board, deck · bridges at deck height</div></div>
+    <div class="fig" role="listitem"><div class="label">Spawn to the die</div><div class="value">≈ 11–12 s</div><div class="sub">via either floor lane, CoD4 movement speeds</div></div>
+  </div>
+
+  <section aria-labelledby="levels-h">
+    <div class="section-head">
+      <h2 id="levels-h">Three levels</h2>
+      <p class="prose">The deck sits 14.3 m up, the height of Crash's tallest rooftop. The board is a 1.8 m step above the floor, so players can mantle between them anywhere along the crater's open sides. Getting onto the deck takes a ramp, and there are only four of them.</p>
+    </div>
+    <div class="levels">
+      <div class="level"><div class="chipline"><span class="sw" style="background: var(--t-floor)"></span><span class="name">Floor</span><span class="h">0 m</span></div><p>The PSU shroud. Two long lanes run past the card: a cluttered cable alley against the motherboard and a wider lane along the shattered side glass.</p></div>
+      <div class="level"><div class="chipline"><span class="sw" style="background: var(--t-board)"></span><span class="name">Board</span><span class="h">1.8 m</span></div><p>The exposed circuit board where the middle fan used to be. The GPU die is the raised objective in the centre, ringed by memory chips (knee-high cover) and power chokes (full cover).</p></div>
+      <div class="level"><div class="chipline"><span class="sw" style="background: var(--t-deck)"></span><span class="name">Deck</span><span class="h">14.3 m</span></div><p>The tops of the two surviving fan sections. Each is a ring of walkway around a fan pit. Two bent heatpipes bridge the crater between them at the same height.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="plan-h">
+    <div class="section-head">
+      <h2 id="plan-h">Plan</h2>
+      <p class="prose">Top-down, to scale, with the rear of the case on the left. Choose a level to highlight what's walkable there. Hover or tap anything for its size.</p>
+    </div>
+    <div class="sheet">
+      <div class="controls">
+        <div class="ctl-group" role="group" aria-label="Highlight level">
+          <span class="ctl-label">Highlight</span>
+          <button class="chip" type="button" id="lv-all" data-lv="all" aria-pressed="true">All levels</button>
+          <button class="chip" type="button" id="lv-floor" data-lv="floor" aria-pressed="false">Floor · 0 m</button>
+          <button class="chip" type="button" id="lv-board" data-lv="board" aria-pressed="false">Board · 1.8 m</button>
+          <button class="chip" type="button" id="lv-deck" data-lv="deck" aria-pressed="false">Deck · 14.3 m</button>
+        </div>
+      </div>
+      <div class="scroll-x" id="planBox">
+        <svg class="plan-svg" id="plan" role="img" aria-label="Top-down plan of the Unseated blockout with floor lanes, the board crater, fan decks, ramps, bridges and off-limits areas" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="tip" id="tip" hidden></div>
+      </div>
+      <div class="legend">
+        <span><i class="lg" style="background: var(--t-floor)"></i>Floor</span>
+        <span><i class="lg" style="background: var(--t-board)"></i>Board</span>
+        <span><i class="lg" style="background: var(--t-deck)"></i>Deck and bridges</span>
+        <span><svg width="16" height="12" aria-hidden="true"><rect width="16" height="12" fill="url(#hatchLegend)" stroke="var(--hatch)"/><defs><pattern id="hatchLegend" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" stroke="var(--hatch)" stroke-width="1.4"/></pattern></defs></svg>Off-limits</span>
+        <span><i class="lg" style="background: var(--team-a)"></i>Team A spawn</span>
+        <span><i class="lg" style="background: var(--team-b)"></i>Team B spawn</span>
+        <span>›› Ramp, pointing uphill</span>
+      </div>
+      <p class="hint">Grid lines every 10 m. The red-orange square by the die is one player at true size: 0.76 m wide.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="sec-h">
+    <div class="section-head">
+      <h2 id="sec-h">Sections</h2>
+      <p class="prose">Two cuts through the middle of the map. Solid shapes are cut through; pale shapes are further back. Every figure is one player at true size, 1.78 m tall.</p>
+    </div>
+    <div class="sheet">
+      <h3>Long section · along the centre line</h3>
+      <div class="scroll-x"><svg class="sec-svg" id="secLong" role="img" aria-label="Long section along the card showing spawns, the two fan decks, the board crater and the die" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    </div>
+    <div class="sheet">
+      <h3>Cross-section · through the die</h3>
+      <div class="scroll-x"><svg class="sec-svg" id="secCross" role="img" aria-label="Cross-section through the crater showing the cable alley, the board, the die, heatpipe ramps and bridges, and the glass lane" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="lanes-h">
+    <div class="section-head">
+      <h2 id="lanes-h">Lanes</h2>
+      <p class="prose">Times use CoD4's base speeds: 4.8 m/s running and 7.2 m/s sprinting for the first 4 s. Sightline figures are targets to block out to.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Lane</th><th>Level</th><th class="num">Size</th><th>Fights</th><th class="num">Longest clear line</th><th class="num">Spawn to the fight</th></tr></thead>
+        <tbody>
+          <tr><td>Cable alley<small>between the motherboard and the card</small></td><td>Floor, 0 m</td><td class="num">9 × 129 m</td><td>Close range. Cable bundles spilling from the motherboard split it into rooms. Headers and empty slots jut from the wall as overhangs.</td><td class="num">≈ 60 m</td><td class="num">die ≈ 11–12 s</td></tr>
+          <tr><td>Glass lane<small>between the card and the broken side panel</small></td><td>Floor, 0 m</td><td class="num">10 × 129 m</td><td>Mid range. Tempered-glass cubes, 2–3.5 m across at this scale, are the cover.</td><td class="num">≈ 45 m</td><td class="num">die ≈ 11–12 s</td></tr>
+          <tr><td>The board<small>the crater where the middle fan was</small></td><td>Board, 1.8 m</td><td class="num">33 × 49 m</td><td>The objective bowl. Every other lane can see into it, so it needs its own cover: chokes, memory chips and the die's steps.</td><td class="num">≈ 35 m</td><td class="num">—</td></tr>
+          <tr><td>Fan decks<small>one at each end</small></td><td>Deck, 14.3 m</td><td class="num">38 × 49 m each<small>rims 8.5 m wide</small></td><td>Long range. A ring of walkway around each fan pit, looking down into the crater and both floor lanes.</td><td class="num">≈ 70 m<small>with shroud flaps at the crater edge</small></td><td class="num">far rim ≈ 14 s</td></tr>
+          <tr><td>Heatpipe bridges<small>two, across the crater</small></td><td>Deck, 14.3 m</td><td class="num">2.9 m wide, 33 m span</td><td>The quick, exposed way from deck to deck, right over the objective.</td><td class="num">—</td><td class="num">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="off-h">
+    <div class="cols">
+      <div class="section-head">
+        <h2 id="off-h">Off-limits</h2>
+        <ul class="plain">
+          <li><b>The fin stacks.</b> They fill both fan sections under the decks. Their torn faces form the crater's end walls, 12.5 m of exposed fins. At this scale the fins are 0.35–0.7 m apart, narrower than a 0.76 m player, so render them as walls and block them with collision.</li>
+          <li><b>The fan pits.</b> Each is a hole about 32 m across in the middle of a deck. The blades sheared off, so the pit drops straight into the fins. Make it a kill volume, or net it with debris so nobody falls in.</li>
+          <li><b>The fan hubs.</b> They sit in the middle of each pit, visible but out of reach. You could add a risky jump route later.</li>
+          <li><b>Under the shroud.</b> The power supply's area stays sealed. Sparks from the cable holes give the floor some light and noise. Power-supply capacitors can hold charge after the power goes out, which explains the sparks.</li>
+          <li><b>Outside the case.</b> The map ends at the glass rubble on one side and the motherboard on the other.</li>
+        </ul>
+      </div>
+      <div class="section-head">
+        <h2>Damage that does a job</h2>
+        <ul class="plain">
+          <li><b>Bent heatpipes.</b> Two curl up from the board to the decks as ramps, and two still span the crater as bridges.</li>
+          <li><b>Torn shroud flaps</b> stand up at the crater edge of each deck. They break the deck-to-deck sniper line.</li>
+          <li><b>A shroud lip</b> overhangs both floor lanes by 1–2 m, so a player on the deck rim can't see the half of the lane nearest the card.</li>
+          <li><b>The melted power connector</b> on the front deck is Team B's landmark. Its cable runs down to their spawn as their ramp up.</li>
+          <li><b>Dust bunnies</b> are 2–4 m clumps. Use them as soft cover that blocks sight but not bullets.</li>
+          <li><b>RGB LEDs on standby power</b> still flicker, which gives you light sources in a dead machine.</li>
+          <li><b>Safe drops.</b> Add one or two cable piles under each deck. A 14 m fall should kill, so these are the only quick ways down.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="scale-h">
+    <div class="section-head">
+      <h2 id="scale-h">Scale cheat sheet</h2>
+      <p class="prose">Model parts at their real size, then scale them up by 357. Real sizes are typical values for a big three-fan card, rounded.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Part</th><th class="num">Real</th><th class="num">In game</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>Player</td><td class="num">5.0 × 2.1 mm</td><td class="num">1.78 × 0.76 m</td><td>70 × 30 engine units</td></tr>
+          <tr><td>Graphics card</td><td class="num">304 × 137 × 40 mm</td><td class="num">109 × 49 × 14.3 m</td><td>The map's spine</td></tr>
+          <tr><td>Backplate, gap and circuit board</td><td class="num">≈ 5 mm</td><td class="num">1.8 m</td><td>Ledge from floor up to board</td></tr>
+          <tr><td>Fan</td><td class="num">≈ 90 mm</td><td class="num">≈ 32 m</td><td>Pit in each deck</td></tr>
+          <tr><td>Heatpipe</td><td class="num">8 mm across</td><td class="num">2.9 m</td><td>Bridges and ramps</td></tr>
+          <tr><td>Fin gap</td><td class="num">1–2 mm</td><td class="num">0.35–0.7 m</td><td>Too tight to walk: off-limits</td></tr>
+          <tr><td>GPU die</td><td class="num">≈ 27 × 27 mm</td><td class="num">≈ 10 × 10 m</td><td>Objective, on an 18 m package</td></tr>
+          <tr><td>Memory chip</td><td class="num">14 × 12 × ≈ 1 mm</td><td class="num">5.0 × 4.3 × 0.4 m</td><td>Knee-high cover</td></tr>
+          <tr><td>Power choke</td><td class="num">≈ 7 × 7 × 6 mm</td><td class="num">≈ 2.5 × 2.5 × 2.1 m</td><td>Full cover</td></tr>
+          <tr><td>Tiny capacitor</td><td class="num">1.0 × 0.5 mm</td><td class="num">36 × 18 cm</td><td>Clutter</td></tr>
+          <tr><td>Tempered-glass cube</td><td class="num">5–10 mm</td><td class="num">1.8–3.6 m</td><td>Rubble cover</td></tr>
+          <tr><td>Power cable wire</td><td class="num">≈ 3 mm across</td><td class="num">≈ 1.1 m</td><td>Climbable bundle</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="notes" aria-labelledby="notes-h">
+    <h2 id="notes-h">Assumptions</h2>
+    <ul class="plain">
+      <li>Scale is 357×, so the card's 304 mm length matches Crash's 109 m long side. The player is CoD4's 70 × 30-unit hull, with 1 unit = 1 inch.</li>
+      <li>The card is a made-up three-fan design built from typical part sizes. It is not any specific product. The gaps between card, motherboard and side panel are set for gameplay.</li>
+      <li>The layout is rotationally symmetric: turn it 180° and Team A's side matches Team B's. The two floor lanes are deliberately different, one close range and one mid range.</li>
+      <li>For Domination, put B on the die and A and C on each team's end deck.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(function () {
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs, parent) => {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+  const txt = (parent, x, y, s, size, attrs = {}) => {
+    const t = el("text", Object.assign({ x, y, "font-family": "IBM Plex Sans, system-ui, sans-serif", "font-size": size, fill: "var(--ink)", "paint-order": "stroke", stroke: "var(--panel)", "stroke-width": size * 0.22, "stroke-linejoin": "round" }, attrs), parent);
+    t.textContent = s;
+    return t;
+  };
+
+  // World, in metres. X runs along the card (rear of case at 0), Y across (motherboard at 0, side glass at 68).
+  const CARD = { x0: 0, x1: 108.6, y0: 9, y1: 57.9 };
+  const CY = (CARD.y0 + CARD.y1) / 2;            // 33.45, centre line
+  const CRATER = { x0: 38, x1: 70.6 };
+  const FAN_R = 16, FAN_REAR = 19, FAN_FRONT = 89.6, HUB_R = 5.5;
+  const Z_BOARD = 1.8, Z_DECK = 14.3;
+  // 180° rotation about the map centre: (x, y, w, h) -> mirrored rect.
+  const mirror = r => ({ x: 108.6 - r.x - r.w, y: 66.9 - r.y - r.h, w: r.w, h: r.h });
+
+  /* ---------- Plan ---------- */
+  const plan = document.getElementById("plan");
+  const VB = { x: -14, y: -7, w: 136.6, h: 83 };
+  plan.setAttribute("viewBox", `${VB.x} ${VB.y} ${VB.w} ${VB.h}`);
+  const defs = el("defs", {}, plan);
+  const pat = el("pattern", { id: "hatch", width: 1.6, height: 1.6, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, defs);
+  el("rect", { width: 1.6, height: 1.6, fill: "var(--panel)" }, pat);
+  el("line", { x1: 0, y1: 0, x2: 0, y2: 1.6, stroke: "var(--hatch)", "stroke-width": 0.5 }, pat);
+  el("rect", { x: VB.x, y: VB.y, width: VB.w, height: VB.h, fill: "var(--panel)" }, plan);
+
+  const gGrid = el("g", { "pointer-events": "none" }, plan);
+  for (let x = -10; x <= 120; x += 10) el("line", { x1: x, y1: -4, x2: x, y2: 72, stroke: "var(--grid)", "stroke-width": 0.15 }, gGrid);
+  for (let y = 0; y <= 70; y += 10) el("line", { x1: -10, y1: y, x2: 118.6, y2: y, stroke: "var(--grid)", "stroke-width": 0.15 }, gGrid);
+
+  const tiers = { floor: el("g", { "data-tier": "floor" }, plan), board: el("g", { "data-tier": "board" }, plan), deck: el("g", { "data-tier": "deck" }, plan), off: el("g", { "data-tier": "off" }, plan), labels: el("g", { "pointer-events": "none" }, plan) };
+  const tipped = (node, tip) => { node.dataset.tip = tip; return node; };
+  const rect = (g, r, attrs, tip) => tipped(el("rect", Object.assign({ x: r.x, y: r.y, width: r.w, height: r.h }, attrs), g), tip);
+
+  // Floor: lanes and spawns.
+  rect(tiers.floor, { x: -10, y: 0, w: 128.6, h: CARD.y0 }, { fill: "var(--t-floor)" }, "Cable alley · floor, 0 m · 9 m wide");
+  rect(tiers.floor, { x: -10, y: CARD.y1, w: 128.6, h: 68 - CARD.y1 }, { fill: "var(--t-floor)" }, "Glass lane · floor, 0 m · 10 m wide");
+  rect(tiers.floor, { x: -10, y: CARD.y0, w: 10, h: CARD.y1 - CARD.y0 }, { fill: "var(--t-floor)" }, "Team A spawn · behind the card's I/O bracket");
+  rect(tiers.floor, { x: 108.6, y: CARD.y0, w: 10, h: CARD.y1 - CARD.y0 }, { fill: "var(--t-floor)" }, "Team B spawn · front of the case");
+  rect(tiers.floor, { x: -10, y: 0, w: 1.2, h: 68 }, { fill: "var(--team-a)" }, "Team A spawn");
+  rect(tiers.floor, { x: 117.4, y: 0, w: 1.2, h: 68 }, { fill: "var(--team-b)" }, "Team B spawn");
+
+  // Floor cover: cable bundles in the alley, glass cubes in the glass lane.
+  for (const cx of [24, 84.6]) rect(tiers.floor, { x: cx - 1.6, y: 0, w: 3.2, h: 6 }, { fill: "var(--ink-2)", rx: 0.8 }, "Cable bundle from the motherboard · ≈ 3 m thick, 3 m gap at the card side");
+  const cubes = [[8, 61, 2.6], [15, 65, 3.4], [27, 60.5, 2.2], [33, 64, 3], [46, 62, 2.4], [58, 65.2, 3.2], [66, 60.8, 2.8], [77, 63.5, 2.2], [88, 61, 3.4], [97, 65, 2.6], [104, 61.5, 2]];
+  for (const [x, y, s] of cubes) rect(tiers.floor, { x: x - s / 2, y: y - s / 2, w: s, h: s }, { fill: "var(--ink-2)", opacity: 0.55, transform: `rotate(${(x * 7) % 30 - 15} ${x} ${y})` }, `Tempered-glass cube · ${s} m · cover`);
+
+  // Board: the crater.
+  rect(tiers.board, { x: CRATER.x0, y: CARD.y0, w: CRATER.x1 - CRATER.x0, h: CARD.y1 - CARD.y0 }, { fill: "var(--t-board)" }, "The board · 1.8 m up · 33 × 49 m crater where the middle fan was");
+  const pkg = { x: 45.3, y: CY - 9, w: 18, h: 18 }, die = { x: 49.3, y: CY - 5, w: 10, h: 10 };
+  rect(tiers.board, pkg, { fill: "var(--t-deck)", opacity: 0.35, stroke: "var(--ink-2)", "stroke-width": 0.2 }, "GPU package · 18 × 18 m · 0.7 m step up");
+  rect(tiers.board, die, { fill: "var(--t-deck)", opacity: 0.75, stroke: "var(--ink)", "stroke-width": 0.25 }, "GPU die · 10 × 10 m · objective · another 0.3 m up");
+  const mem = [];
+  for (const y of [CY - 8.2, CY - 2.15, CY + 3.9]) { mem.push({ x: 39.4, y, w: 4.3, h: 5 }); mem.push({ x: 64.9, y, w: 4.3, h: 5 }); }
+  for (const x of [46.3, 51.8, 57.3]) { mem.push({ x, y: CY - 14.4, w: 5, h: 4.3 }); mem.push({ x, y: CY + 10.1, w: 5, h: 4.3 }); }
+  for (const m of mem) rect(tiers.board, m, { fill: "var(--ink-2)", opacity: 0.45 }, "Memory chip · 5 × 4.3 m · 0.4 m tall · knee-high cover");
+  const chokes = [{ x: 39.5, y: 15.4, w: 2.5, h: 2.5 }, { x: 43.5, y: 15.4, w: 2.5, h: 2.5 }, { x: 62.5, y: 15.4, w: 2.5, h: 2.5 }, { x: 66.5, y: 15.4, w: 2.5, h: 2.5 }];
+  for (const c of chokes.concat(chokes.map(mirror))) rect(tiers.board, c, { fill: "var(--ink)", opacity: 0.8 }, "Power choke · 2.5 m square · 2.1 m tall · full cover");
+  // Mantle edges where the crater opens onto the floor lanes.
+  for (const y of [CARD.y0, CARD.y1]) tipped(el("line", { x1: CRATER.x0, y1: y, x2: CRATER.x1, y2: y, stroke: "var(--ink)", "stroke-width": 0.35, "stroke-dasharray": "1.2 0.8" }, tiers.board), "1.8 m ledge · mantle up from the floor lane");
+
+  // Deck: two rings with a pit each.
+  function deckPath(x0, x1, fx) {
+    return `M${x0} ${CARD.y0}H${x1}V${CARD.y1}H${x0}Z M${fx - FAN_R} ${CY}a${FAN_R} ${FAN_R} 0 1 0 ${FAN_R * 2} 0a${FAN_R} ${FAN_R} 0 1 0 ${-FAN_R * 2} 0Z`;
+  }
+  tipped(el("path", { d: deckPath(0, CRATER.x0, FAN_REAR), fill: "var(--t-deck)", "fill-rule": "evenodd" }, tiers.deck), "Rear fan deck · 14.3 m up · ring walkway, rims 8.5 m wide");
+  tipped(el("path", { d: deckPath(CRATER.x1, 108.6, FAN_FRONT), fill: "var(--t-deck)", "fill-rule": "evenodd" }, tiers.deck), "Front fan deck · 14.3 m up · ring walkway, rims 8.5 m wide");
+  // Heatpipe bridges across the crater.
+  for (const y of [20, 66.9 - 20]) rect(tiers.deck, { x: CRATER.x0, y: y - 1.45, w: CRATER.x1 - CRATER.x0, h: 2.9 }, { fill: "var(--t-deck)", stroke: "var(--ink)", "stroke-width": 0.25 }, "Heatpipe bridge · 14.3 m up · 2.9 m wide · 33 m span");
+  // Ramps (chevrons point uphill).
+  function ramp(r, dir, tip) {
+    const g = el("g", {}, tiers.deck);
+    rect(g, r, { fill: "var(--t-deck)", opacity: 0.55, stroke: "var(--ink)", "stroke-width": 0.25 }, tip);
+    const along = dir === "left" || dir === "right";
+    const len = along ? r.w : r.h, n = Math.floor(len / 3.2);
+    for (let i = 0; i < n; i++) {
+      const t = (i + 0.5) / n;
+      let cx = along ? r.x + t * r.w : r.x + r.w / 2, cy = along ? r.y + r.h / 2 : r.y + t * r.h;
+      const s = 0.9, rot = { left: 180, right: 0, up: -90, down: 90 }[dir];
+      el("path", { d: `M${-s} ${-s}L0 0L${-s} ${s}`, fill: "none", stroke: "var(--ink)", "stroke-width": 0.3, transform: `translate(${cx} ${cy}) rotate(${rot})`, "pointer-events": "none" }, g);
+    }
+  }
+  ramp({ x: CRATER.x0, y: 11.05, w: 24, h: 2.9 }, "left", "Bent heatpipe ramp · board to rear deck · rises 12.5 m over 24 m");
+  ramp(mirror({ x: CRATER.x0, y: 11.05, w: 24, h: 2.9 }), "right", "Bent heatpipe ramp · board to front deck · rises 12.5 m over 24 m");
+  const rampA = { x: -7, y: 16, w: 3, h: 34 }, landA = { x: -7, y: 50, w: 7, h: 7.9 };
+  ramp(rampA, "down", "Bracket ramp · Team A spawn to rear deck · rises 14.3 m over 34 m");
+  rect(tiers.deck, landA, { fill: "var(--t-deck)" }, "Bracket landing · rear deck corner");
+  ramp(mirror(rampA), "up", "Power-cable ramp · Team B spawn to front deck · rises 14.3 m over 34 m");
+  rect(tiers.deck, mirror(landA), { fill: "var(--t-deck)" }, "Cable landing · front deck corner");
+  // Torn shroud flaps at the crater edges of each deck.
+  for (const r of [{ x: 36.6, y: 24, w: 1, h: 6 }, { x: 36.6, y: 37, w: 1, h: 6 }]) {
+    rect(tiers.deck, r, { fill: "var(--ink)" }, "Torn shroud flap · 3–4 m tall · blocks the deck-to-deck sightline");
+    rect(tiers.deck, mirror(r), { fill: "var(--ink)" }, "Torn shroud flap · 3–4 m tall · blocks the deck-to-deck sightline");
+  }
+  rect(tiers.deck, { x: 104.5, y: 18.5, w: 2.6, h: 7 }, { fill: "var(--team-b)", rx: 0.4 }, "Melted power connector · Team B's landmark");
+
+  // Off-limits.
+  for (const fx of [FAN_REAR, FAN_FRONT]) {
+    tipped(el("circle", { cx: fx, cy: CY, r: FAN_R, fill: "url(#hatch)", stroke: "var(--hatch)", "stroke-width": 0.3 }, tiers.off), "Fan pit · ≈ 32 m across · drops into the fin stack · off-limits");
+    tipped(el("circle", { cx: fx, cy: CY, r: HUB_R, fill: "var(--t-deck)", opacity: 0.5, stroke: "var(--hatch)", "stroke-width": 0.3 }, tiers.off), "Fan hub · visible, out of reach");
+  }
+  for (const x of [CRATER.x0, CRATER.x1]) tipped(el("line", { x1: x, y1: CARD.y0, x2: x, y2: CARD.y1, stroke: "var(--ink)", "stroke-width": 0.8 }, tiers.off), "Exposed fin wall · 12.5 m tall · off-limits");
+  rect(tiers.off, { x: -10, y: -4, w: 128.6, h: 4 }, { fill: "url(#hatch)" }, "Motherboard · the alley's wall · out of bounds behind it");
+  rect(tiers.off, { x: -10, y: 68, w: 128.6, h: 4 }, { fill: "url(#hatch)" }, "Shattered side glass · out of bounds");
+
+  // Player, true size, beside the die.
+  const pl = { x: 52.2, y: CY + 6.4, w: 0.76, h: 0.76 };
+  rect(tiers.labels, pl, { fill: "var(--team-b)" }, "");
+
+  // Labels.
+  const L = tiers.labels;
+  txt(L, -9, 5.4, "Cable alley", 2.2, { "font-weight": 600 });
+  txt(L, 2, 63.8, "Glass lane", 2.2, { "font-weight": 600 });
+  txt(L, 54.3, 52.4, "Board · 1.8 m", 1.9, { "text-anchor": "middle", "font-weight": 600 });
+  txt(L, 54.3, CY + 0.8, "GPU die", 2, { "text-anchor": "middle", "font-weight": 600 });
+  txt(L, 53.3, CY + 8.6, "player", 1.4, { fill: "var(--team-b)" });
+  txt(L, FAN_REAR, CY + 0.7, "fan pit", 1.8, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  txt(L, FAN_FRONT, CY + 0.7, "fan pit", 1.8, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  txt(L, 19, 13.9, "Rear deck · 14.3 m", 2, { "text-anchor": "middle", fill: "var(--t-deck-ink)", stroke: "none" });
+  txt(L, 89.6, 55.6, "Front deck · 14.3 m", 2, { "text-anchor": "middle", fill: "var(--t-deck-ink)", stroke: "none" });
+  txt(L, 54.3, 17.4, "heatpipe bridges ↓", 1.5, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  txt(L, -5, 35, "A", 4.5, { "text-anchor": "middle", fill: "var(--team-a)", "font-weight": 700, "font-family": "Big Shoulders Stencil Display, Impact, sans-serif" });
+  txt(L, 113.6, 35, "B", 4.5, { "text-anchor": "middle", fill: "var(--team-b)", "font-weight": 700, "font-family": "Big Shoulders Stencil Display, Impact, sans-serif" });
+  txt(L, 54.3, -1.2, "Motherboard", 1.7, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  txt(L, 54.3, 71, "Shattered side glass", 1.7, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  txt(L, 99.5, 17.4, "melted connector", 1.5, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  // Scale bar: 10 m.
+  el("rect", { x: 1, y: 73.6, width: 10, height: 0.6, fill: "var(--ink)" }, L);
+  txt(L, 12, 74.6, "10 m", 1.6);
+
+  // Level highlight.
+  document.querySelectorAll("[data-lv]").forEach(b => b.addEventListener("click", () => {
+    const lv = b.dataset.lv;
+    document.querySelectorAll("[data-lv]").forEach(o => o.setAttribute("aria-pressed", String(o === b)));
+    for (const k of ["floor", "board", "deck"]) tiers[k].setAttribute("data-dim", String(lv !== "all" && lv !== k));
+  }));
+
+  // Tooltips.
+  const box = document.getElementById("planBox"), tip = document.getElementById("tip");
+  plan.addEventListener("pointermove", e => {
+    const t = e.target.closest("[data-tip]");
+    if (!t || !t.dataset.tip) { tip.hidden = true; return; }
+    const r = box.getBoundingClientRect();
+    tip.textContent = t.dataset.tip;
+    tip.style.left = `${e.clientX - r.left + box.scrollLeft}px`;
+    tip.style.top = `${e.clientY - r.top}px`;
+    tip.hidden = false;
+  });
+  plan.addEventListener("pointerleave", () => { tip.hidden = true; });
+
+  /* ---------- Sections ---------- */
+  function player(g, x, z, opts = {}) {
+    // A 1.78 m figure standing on height z (section coords: y = -z).
+    const s = 1;
+    const c = opts.color || "var(--ink)";
+    el("circle", { cx: x, cy: -(z + 1.62 * s), r: 0.14 * s, fill: c }, g);
+    el("rect", { x: x - 0.2, y: -(z + 1.45), width: 0.4, height: 0.68, rx: 0.12, fill: c }, g);
+    el("rect", { x: x - 0.18, y: -(z + 0.78), width: 0.14, height: 0.78, rx: 0.06, fill: c }, g);
+    el("rect", { x: x + 0.04, y: -(z + 0.78), width: 0.14, height: 0.78, rx: 0.06, fill: c }, g);
+  }
+  function axis(g, x0, x1) {
+    for (const [z, lab] of [[0, "0 m"], [Z_BOARD, "1.8 m"], [Z_DECK, "14.3 m"]]) {
+      el("line", { x1: x0, y1: -z, x2: x1, y2: -z, stroke: z ? "var(--grid)" : "var(--ink)", "stroke-width": z ? 0.12 : 0.25, "stroke-dasharray": z ? "0.8 0.6" : "none" }, g);
+      txt(g, x0 - 0.8, -z + 0.5, lab, 1.5, { "text-anchor": "end", fill: "var(--muted)", "font-family": "IBM Plex Mono, ui-monospace, monospace" });
+    }
+  }
+
+  // Long section along y = CY.
+  const sl = document.getElementById("secLong");
+  sl.setAttribute("viewBox", "-18 -24 140 28");
+  el("rect", { x: -18, y: -24, width: 140, height: 28, fill: "var(--panel)" }, sl);
+  axis(sl, -11, 120);
+  // Beyond the cut: deck rims at full height (pale).
+  el("rect", { x: 0, y: -Z_DECK, width: CRATER.x0, height: Z_DECK, fill: "var(--t-deck)", opacity: 0.22 }, sl);
+  el("rect", { x: CRATER.x1, y: -Z_DECK, width: 108.6 - CRATER.x1, height: Z_DECK, fill: "var(--t-deck)", opacity: 0.22 }, sl);
+  // Bridge beyond, and the heatpipe ramp beyond.
+  el("rect", { x: CRATER.x0, y: -Z_DECK, width: CRATER.x1 - CRATER.x0, height: 2.9, fill: "var(--t-deck)", opacity: 0.4 }, sl);
+  txt(sl, 54.3, -Z_DECK - 0.8, "heatpipe bridge (beyond)", 1.4, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  el("path", { d: `M${CRATER.x0} ${-Z_DECK} L${CRATER.x0 + 24} ${-Z_BOARD} L${CRATER.x0 + 24} ${-Z_BOARD + 0.01}`, stroke: "var(--t-deck)", "stroke-width": 1.4, opacity: 0.45, fill: "none" }, sl);
+  // Cut: board slab full length.
+  el("rect", { x: 0, y: -Z_BOARD, width: 108.6, height: Z_BOARD, fill: "var(--t-board)" }, sl);
+  // Cut: fin stacks under the deck surfaces, with pits through the centre line.
+  for (const [x0, x1, fx] of [[0, CRATER.x0, FAN_REAR], [CRATER.x1, 108.6, FAN_FRONT]]) {
+    el("rect", { x: x0, y: -Z_DECK, width: x1 - x0, height: Z_DECK - Z_BOARD, fill: "url(#hatchS)" }, sl);
+    // deck surface either side of the pit
+    el("rect", { x: x0, y: -Z_DECK, width: fx - FAN_R - x0, height: 0.6, fill: "var(--t-deck)" }, sl);
+    el("rect", { x: fx + FAN_R, y: -Z_DECK, width: x1 - fx - FAN_R, height: 0.6, fill: "var(--t-deck)" }, sl);
+    // hub
+    el("rect", { x: fx - HUB_R, y: -Z_DECK, width: HUB_R * 2, height: 2.5, fill: "var(--t-deck)", opacity: 0.6 }, sl);
+    txt(sl, fx, -Z_DECK + 7, "fin stack · off-limits", 1.4, { "text-anchor": "middle", fill: "var(--ink-2)" });
+    txt(sl, fx, -Z_DECK - 0.8, "fan pit", 1.4, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  }
+  const dS = el("defs", {}, sl);
+  const pS = el("pattern", { id: "hatchS", width: 1.2, height: 1.2, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, dS);
+  el("rect", { width: 1.2, height: 1.2, fill: "var(--panel)" }, pS);
+  el("line", { x1: 0, y1: 0, x2: 0, y2: 1.2, stroke: "var(--hatch)", "stroke-width": 0.35 }, pS);
+  // Die steps.
+  el("rect", { x: pkg.x, y: -(Z_BOARD + 0.7), width: pkg.w, height: 0.7, fill: "var(--t-deck)", opacity: 0.5 }, sl);
+  el("rect", { x: die.x, y: -(Z_BOARD + 1.0), width: die.w, height: 0.3, fill: "var(--t-deck)" }, sl);
+  txt(sl, 54.3, -(Z_BOARD + 2.4), "GPU die", 1.5, { "text-anchor": "middle", "font-weight": 600 });
+  // Spawns and the bracket.
+  el("rect", { x: -0.6, y: -Z_DECK, width: 0.6, height: Z_DECK, fill: "var(--ink-2)" }, sl);
+  txt(sl, -5, -9, "A", 3.4, { "text-anchor": "middle", fill: "var(--team-a)", "font-weight": 700, "font-family": "Big Shoulders Stencil Display, Impact, sans-serif" });
+  txt(sl, 113.6, -9, "B", 3.4, { "text-anchor": "middle", fill: "var(--team-b)", "font-weight": 700, "font-family": "Big Shoulders Stencil Display, Impact, sans-serif" });
+  txt(sl, 1, -Z_DECK - 1.6, "I/O bracket", 1.3, { fill: "var(--ink-2)" });
+  // Players.
+  player(sl, -6, 0); player(sl, 47, Z_BOARD); player(sl, 54.3, Z_BOARD + 1.0, { color: "var(--team-b)" }); player(sl, 36.5, Z_DECK); player(sl, 72.5, Z_DECK);
+  txt(sl, 1, 2.6, "Floor lanes run the full length either side of this cut. The crater floor is the board; the decks are 12.5 m above it.", 1.3, { fill: "var(--muted)" });
+
+  // Cross-section at x = 54.3, looking towards the front deck.
+  const sc = document.getElementById("secCross");
+  sc.setAttribute("viewBox", "-10 -24 86 28");
+  el("rect", { x: -10, y: -24, width: 86, height: 28, fill: "var(--panel)" }, sc);
+  axis(sc, -3, 74);
+  // Beyond: front deck face (pale), full card width.
+  el("rect", { x: CARD.y0, y: -Z_DECK, width: CARD.y1 - CARD.y0, height: Z_DECK - Z_BOARD, fill: "var(--t-deck)", opacity: 0.18 }, sc);
+  txt(sc, CY, -Z_DECK + 4, "front deck and fin wall (beyond)", 1.4, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  // Motherboard wall and glass rubble.
+  el("rect", { x: -1.2, y: -22, width: 1.2, height: 22, fill: "url(#hatchC)" }, sc);
+  txt(sc, -1.8, -18, "motherboard", 1.3, { "text-anchor": "end", fill: "var(--ink-2)" });
+  for (const [y, s] of [[61, 2.4], [64.5, 3.4], [67.5, 2]]) el("rect", { x: y - s / 2, y: -s, width: s, height: s, fill: "var(--ink-2)", opacity: 0.55 }, sc);
+  const dC = el("defs", {}, sc);
+  const pC = el("pattern", { id: "hatchC", width: 1.2, height: 1.2, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, dC);
+  el("rect", { width: 1.2, height: 1.2, fill: "var(--panel)" }, pC);
+  el("line", { x1: 0, y1: 0, x2: 0, y2: 1.2, stroke: "var(--hatch)", "stroke-width": 0.35 }, pC);
+  // Cut: board slab.
+  el("rect", { x: CARD.y0, y: -Z_BOARD, width: CARD.y1 - CARD.y0, height: Z_BOARD, fill: "var(--t-board)" }, sc);
+  // Components on the board along this cut: chokes, memory, package, die.
+  const zc = Z_BOARD;
+  el("rect", { x: 15.4, y: -(zc + 2.1), width: 2.5, height: 2.1, fill: "var(--ink)", opacity: 0.3 }, sc);
+  el("rect", { x: 66.9 - 15.4 - 2.5, y: -(zc + 2.1), width: 2.5, height: 2.1, fill: "var(--ink)", opacity: 0.3 }, sc);
+  el("rect", { x: CY - 14.4, y: -(zc + 0.4), width: 4.3, height: 0.4, fill: "var(--ink-2)" }, sc);
+  el("rect", { x: CY + 10.1, y: -(zc + 0.4), width: 4.3, height: 0.4, fill: "var(--ink-2)" }, sc);
+  el("rect", { x: pkg.y, y: -(zc + 0.7), width: pkg.h, height: 0.7, fill: "var(--t-deck)", opacity: 0.5 }, sc);
+  el("rect", { x: die.y, y: -(zc + 1.0), width: die.h, height: 0.3, fill: "var(--t-deck)" }, sc);
+  txt(sc, CY, -(zc + 2.4), "GPU die", 1.5, { "text-anchor": "middle", "font-weight": 600 });
+  txt(sc, 16.6, -(zc + 2.7), "choke", 1.2, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  // Heatpipes: ramps cut mid-climb (5.8 m up here) and bridges at deck height.
+  for (const y of [12.5, 66.9 - 12.5]) { el("circle", { cx: y, cy: -(5.8 - 1.45), r: 1.45, fill: "var(--t-deck)", stroke: "var(--ink)", "stroke-width": 0.15 }, sc); }
+  for (const y of [20, 66.9 - 20]) { el("circle", { cx: y, cy: -(Z_DECK - 1.45), r: 1.45, fill: "var(--t-deck)", stroke: "var(--ink)", "stroke-width": 0.15 }, sc); }
+  txt(sc, 12.5, -8.2, "ramp", 1.3, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  txt(sc, 20, -Z_DECK - 0.8, "bridge", 1.3, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  txt(sc, 66.9 - 20, -Z_DECK - 0.8, "bridge", 1.3, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  // Lane labels.
+  txt(sc, 4.5, 2.6, "cable alley", 1.4, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  txt(sc, 63, 2.6, "glass lane", 1.4, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  txt(sc, 28, 2.6, "the board", 1.4, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  // Players.
+  player(sc, 4.5, 0); player(sc, 25, Z_BOARD); player(sc, CY - 1.5, Z_BOARD + 1.0, { color: "var(--team-b)" }); player(sc, 20, Z_DECK); player(sc, 12.5, 5.8); player(sc, 60, 0);
+})();
+</script>

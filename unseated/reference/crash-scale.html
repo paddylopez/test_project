@@ -1,0 +1,548 @@
+<title>Crash Map Scale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a field survey sheet. Header and figures on top, then a large to-scale plan beside its key, then elevation, movement, and comparison panels. */
+:root {
+  --bg: #e8ece6;
+  --panel: #f3f5f1;
+  --ink: #18221d;
+  --ink-2: #4a574f;
+  --muted: #6b776f;
+  --rule: #c9d1c9;
+  --grid: #d9dfd8;
+  --grid-major: #b9c3ba;
+  --accent: #c2410c;
+  --accent-soft: rgba(194, 65, 12, 0.12);
+  --lvl-1: #82a99c;
+  --lvl-2: #3f7f6e;
+  --lvl-3: #1b4d41;
+  --edge: rgba(74, 87, 79, 0.45);
+  --font-display: "Big Shoulders Stencil Display", "Arial Narrow", Impact, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121815; --panel: #19211d; --ink: #e2e8e1; --ink-2: #a9b5ac; --muted: #89958c;
+    --rule: #2c3731; --grid: #222b26; --grid-major: #34413a;
+    --accent: #f2884b; --accent-soft: rgba(242, 136, 75, 0.16);
+    --lvl-1: #3f7366; --lvl-2: #6cae9a; --lvl-3: #b4e2d2; --edge: rgba(169, 181, 172, 0.35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121815; --panel: #19211d; --ink: #e2e8e1; --ink-2: #a9b5ac; --muted: #89958c;
+  --rule: #2c3731; --grid: #222b26; --grid-major: #34413a;
+  --accent: #f2884b; --accent-soft: rgba(242, 136, 75, 0.16);
+  --lvl-1: #3f7366; --lvl-2: #6cae9a; --lvl-3: #b4e2d2; --edge: rgba(169, 181, 172, 0.35);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; display: grid; gap: 40px; }
+@media (max-width: 480px) { .wrap { padding-inline: 16px; } }
+
+header { display: grid; gap: 10px; }
+.eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(44px, 8vw, 84px); line-height: 0.92; letter-spacing: 0.01em; margin: 0; text-wrap: balance; }
+h1 em { font-style: normal; color: var(--accent); }
+.lead { max-width: 64ch; margin: 0; color: var(--ink-2); font-size: 16.5px; }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: 30px; letter-spacing: 0.02em; margin: 0; line-height: 1; text-wrap: balance; }
+p { margin: 0; }
+.prose { max-width: 66ch; display: grid; gap: 10px; color: var(--ink-2); }
+.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+
+.figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule); }
+.fig { padding: 14px 16px 16px 0; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.fig + .fig { padding-left: 16px; border-left: 1px solid var(--rule); }
+.fig .label { font-family: var(--font-data); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.fig .value { font-family: var(--font-data); font-weight: 500; font-size: clamp(22px, 2.6vw, 28px); line-height: 1.15; font-variant-numeric: tabular-nums; }
+.fig .sub { font-size: 13.5px; color: var(--ink-2); }
+@media (max-width: 820px) {
+  .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fig:nth-child(3) { padding-left: 0; border-left: 0; }
+  .fig:nth-child(n+3) { border-top: 1px solid var(--rule); }
+}
+
+section { display: grid; gap: 16px; }
+.section-head { display: grid; gap: 8px; }
+
+.plan-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .plan-layout { grid-template-columns: minmax(0, 1fr); } }
+.sheet { background: var(--panel); border: 1px solid var(--rule); border-radius: 4px; padding: 12px; display: grid; gap: 10px; min-width: 0; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.ctl-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ctl-label { font-family: var(--font-data); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+.chip { font: 500 13px/1 var(--font-body); color: var(--ink-2); background: transparent; border: 1px solid var(--rule); border-radius: 999px; padding: 7px 11px; cursor: pointer; }
+.chip:hover { border-color: var(--ink-2); color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--panel); }
+.chip:focus-visible, .map-svg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.map-box { position: relative; }
+.map-svg { display: block; width: 100%; height: auto; touch-action: manipulation; cursor: crosshair; }
+.scalebar { position: absolute; left: 10px; bottom: 10px; display: grid; gap: 3px; pointer-events: none; }
+.scalebar .bar { height: 6px; border: 1.5px solid var(--ink); border-top: 0; }
+.scalebar .txt { font: 500 11.5px/1 var(--font-data); color: var(--ink); background: var(--panel); padding: 2px 4px; justify-self: start; border-radius: 2px; }
+.hint { font-size: 13px; color: var(--muted); }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--panel); font: 12.5px/1.35 var(--font-body); padding: 6px 8px; border-radius: 3px; white-space: nowrap; transform: translate(-50%, calc(-100% - 10px)); z-index: 2; }
+
+.key { display: grid; gap: 18px; align-content: start; font-size: 14px; color: var(--ink-2); }
+.key h3 { font: 600 12px/1.2 var(--font-data); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.key ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.key li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: center; }
+.swatch { width: 12px; height: 12px; border-radius: 50%; justify-self: center; }
+.sw-line { width: 20px; height: 0; border-top: 1.5px dashed var(--ink-2); }
+.sw-player { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); justify-self: center; }
+.readout { font-family: var(--font-data); font-size: 13px; color: var(--ink); display: grid; gap: 4px; }
+.readout span { color: var(--muted); }
+
+.two-col { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 860px) { .two-col { grid-template-columns: minmax(0, 1fr); } }
+.diagram-scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--rule); border-radius: 4px; padding: 12px; }
+.elev-svg { display: block; width: 100%; min-width: 720px; height: auto; }
+
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px 8px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font: 600 11.5px/1.2 var(--font-data); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+td.num, th.num { text-align: right; padding-right: 0; padding-left: 10px; white-space: nowrap; }
+td small { display: block; color: var(--muted); font-size: 12.5px; }
+.table-scroll { overflow-x: auto; }
+
+.lineup { display: flex; flex-wrap: wrap; gap: 22px 26px; align-items: flex-end; }
+.lineup figure { margin: 0; display: grid; gap: 6px; justify-items: start; }
+.lineup svg { display: block; max-width: 100%; height: auto; overflow: visible; }
+.lineup figcaption { font-size: 13px; color: var(--ink-2); line-height: 1.3; }
+.lineup figcaption b { display: block; color: var(--ink); font-weight: 600; }
+.lineup figcaption .num { font-size: 12px; }
+.lineup figure.is-crash figcaption b { color: var(--accent); }
+
+.notes { border-top: 1px solid var(--rule); padding-top: 18px; display: grid; gap: 10px; font-size: 13.5px; color: var(--ink-2); max-width: 78ch; }
+.notes h2 { font-size: 22px; color: var(--ink); }
+.notes ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 2px; }
+a:hover { color: var(--accent); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Call of Duty 4: Modern Warfare (2007) · mp_crash · measured in engine units</div>
+    <h1>Crash, <em>to scale</em></h1>
+    <p class="lead">One engine unit is one inch, and the player is 70 units tall. Measured that way, Crash's walkable space is about the size of a pro soccer pitch, and a player is a speck in it: you would need about 61 people lying head to foot to span the long side.</p>
+  </header>
+
+  <div class="figures" role="list">
+    <div class="fig" role="listitem">
+      <div class="label">Walkable footprint</div>
+      <div class="value">228 × 356 ft</div>
+      <div class="sub">69 × 109 m · 2,730 × 4,276 units</div>
+    </div>
+    <div class="fig" role="listitem">
+      <div class="label">Player hull</div>
+      <div class="value">5′10″ × 2′6″</div>
+      <div class="sub">70 units tall, 30 × 30 wide, eyes at 5′0″</div>
+    </div>
+    <div class="fig" role="listitem">
+      <div class="label">End to end, long side</div>
+      <div class="value">≈ 20 s</div>
+      <div class="sub">4 s sprint, then running, in a straight line</div>
+    </div>
+    <div class="fig" role="listitem">
+      <div class="label">Highest place to stand</div>
+      <div class="value">47 ft up</div>
+      <div class="sub">above the lowest street · about 8 players stacked</div>
+    </div>
+  </div>
+
+  <section aria-labelledby="plan-h">
+    <div class="section-head">
+      <h2 id="plan-h">Plan view</h2>
+      <p class="prose">Every dot is a spot a player can stand, taken from a bot navigation mesh for the map. Lines are walkable links between them. The streets, the open middle and the building interiors show up as the shape of the network. Tap or click anywhere to put the player there, then zoom in on them.</p>
+    </div>
+    <div class="plan-layout">
+      <div class="sheet">
+        <div class="controls">
+          <div class="ctl-group" role="group" aria-label="Zoom">
+            <span class="ctl-label">Zoom</span>
+            <button class="chip" type="button" id="z1" data-zoom="1" aria-pressed="true">Whole map</button>
+            <button class="chip" type="button" id="z4" data-zoom="4" aria-pressed="false">4×</button>
+            <button class="chip" type="button" id="z16" data-zoom="16" aria-pressed="false">16×</button>
+          </div>
+          <div class="ctl-group" role="group" aria-label="Compare with">
+            <span class="ctl-label">Overlay</span>
+            <button class="chip" type="button" id="ov-soccer" data-ov="soccer" aria-pressed="true">Soccer pitch</button>
+            <button class="chip" type="button" id="ov-football" data-ov="football" aria-pressed="false">NFL field</button>
+            <button class="chip" type="button" id="ov-ship" data-ov="ship" aria-pressed="false">Shipment</button>
+          </div>
+        </div>
+        <div class="map-box" id="mapBox">
+          <svg class="map-svg" id="map" tabindex="0" role="img" aria-label="Top-down plan of Crash's walkable network drawn to scale, with a player marker" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="scalebar" aria-hidden="true"><div class="bar" id="sbBar"></div><div class="txt" id="sbTxt"></div></div>
+          <div class="tip" id="tip" hidden></div>
+        </div>
+        <p class="hint">Grid: heavy lines every 50 ft, light lines every 10 ft. The map is rotated to fit the page, so north may not match the in-game minimap.</p>
+      </div>
+      <aside class="key">
+        <div>
+          <h3>Height</h3>
+          <ul>
+            <li><span class="swatch" style="background: var(--lvl-1)"></span><span>Street level <span class="num">(0–10 ft)</span></span></li>
+            <li><span class="swatch" style="background: var(--lvl-2)"></span><span>Upper floors <span class="num">(≈ 11 ft per storey)</span></span></li>
+            <li><span class="swatch" style="background: var(--lvl-3)"></span><span>High rooftop <span class="num">(37–47 ft)</span></span></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Marks</h3>
+          <ul>
+            <li><span class="sw-player"></span><span>Player, true size: a 2′6″ square</span></li>
+            <li><span class="sw-line"></span><span>Comparison outline, centred on the map</span></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Player position</h3>
+          <div class="readout" id="readout"></div>
+        </div>
+        <div>
+          <h3>Scale check</h3>
+          <div class="readout">
+            <div>Long side <span>=</span> 61 player heights</div>
+            <div>Short side <span>=</span> 39 player heights</div>
+            <div>Long side <span>=</span> 143 player widths</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section aria-labelledby="elev-h">
+    <div class="section-head">
+      <h2 id="elev-h">How tall it gets</h2>
+      <div class="prose">
+        <p>Upper floors sit about 11 ft (136 units, roughly two player heights) above the street outside. The highest standing spot is a rooftop about 40 ft above the street next to it, and 47 ft above the lowest street on the map. The street itself falls about 10 ft from one end of the map to the other.</p>
+        <p>A standing player's eyes are at 60 units (5′0″). A jump clears 39 units (3′3″), which is why waist-high walls and crates work as vaults.</p>
+      </div>
+    </div>
+    <div class="diagram-scroll">
+      <svg class="elev-svg" id="elev" role="img" aria-label="Side elevation: a 70-unit player beside floor heights and the highest rooftop" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </section>
+
+  <section aria-labelledby="move-h">
+    <div class="section-head">
+      <h2 id="move-h">How fast you cross it</h2>
+      <p class="prose">Base movement speeds from the game's defaults, before any weapon slows you down. Heavier weapons cut these a little.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Move</th><th class="num">Units/s</th><th class="num">ft/s</th><th class="num">mph</th><th class="num">m/s</th></tr></thead>
+        <tbody>
+          <tr><td>Run<small>default speed, g_speed 190</small></td><td class="num">190</td><td class="num">15.8</td><td class="num">10.8</td><td class="num">4.8</td></tr>
+          <tr><td>Sprint<small>1.5× run, lasts 4 s (8 s with Extreme Conditioning)</small></td><td class="num">285</td><td class="num">23.8</td><td class="num">16.2</td><td class="num">7.2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Trip</th><th class="num">Distance</th><th class="num">Sprint, then run</th><th class="num">Run only</th></tr></thead>
+        <tbody>
+          <tr><td>Short side, straight line</td><td class="num">228 ft</td><td class="num">≈ 12 s</td><td class="num">14 s</td></tr>
+          <tr><td>Long side, straight line</td><td class="num">356 ft</td><td class="num">≈ 20 s</td><td class="num">23 s</td></tr>
+          <tr><td>Longest walkable route<small>farthest pair of spots by the walking network, including stairs and rooms</small></td><td class="num">≈ 616 ft</td><td class="num">≈ 37 s</td><td class="num">39 s</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="cmp-h">
+    <div class="section-head">
+      <h2 id="cmp-h">Next to the other CoD4 maps</h2>
+      <p class="prose">Walkable footprints at one shared scale, smallest to largest by area, measured the same way as Crash. Crash sits in the middle: bigger than the close-quarters maps, about half the size of the large open ones.</p>
+    </div>
+    <div class="lineup" id="lineup"></div>
+  </section>
+
+  <section class="notes" aria-labelledby="notes-h">
+    <h2 id="notes-h">How this was measured</h2>
+    <ul>
+      <li><b>Map extents</b> come from the 224 bot waypoints for mp_crash in <a href="https://github.com/ineedbots/cod4x_bot_warfare" target="_blank" rel="noopener">ineedbots/cod4x_bot_warfare</a>, recorded in-game as engine coordinates. Waypoints mark where a player can stand, so the wall-to-wall size is a little bigger. Expect another 10–20 ft each way.</li>
+      <li><b>Player size and speed</b> come from the defaults in the <a href="https://github.com/callofduty4x/CoD4x_Server" target="_blank" rel="noopener">CoD4x server source</a>: hull ±15 × 70 units, eye height 60, jump_height 39, g_speed 190, player_sprintSpeedScale 1.5, player_sprintTime 4.0.</li>
+      <li><b>One unit = one inch</b> is the working scale IW-engine maps are built to: a 70-unit player reads as 5′10″, and doors and stairs are sized to match. It is a modelling convention. Nothing in the engine enforces it.</li>
+      <li><b>Crossing times</b> assume a straight line at full speed. Real routes bend around cover. The longest route is measured along the waypoint links, which zig-zag a bit, so treat it as an upper estimate.</li>
+      <li>This is the 2007 original. The 2019 Modern Warfare remake of Crash was rebuilt in a different engine and was not measured.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+const DATA = {"pts":[[2203,160,4],[2582,160,6],[2589,56,6],[2346,48,142],[2312,167,142],[2604,170,142],[2608,259,166],[2373,571,166],[2189,581,4],[2540,581,6],[2597,236,6],[2355,375,6],[2493,329,6],[2386,504,6],[2569,740,5],[2223,743,4],[2307,900,5],[2477,859,5],[2116,848,6],[1474,656,4],[829,770,8],[1986,715,5],[1893,499,8],[1714,592,4],[1646,501,3],[1570,31,69],[1216,0,75],[727,17,139],[714,394,0],[685,862,17],[540,715,14],[1378,321,50],[1063,288,22],[922,504,4],[1288,498,2],[804,562,2],[533,1155,48],[546,1488,51],[766,1143,43],[777,1425,45],[806,1763,57],[610,1708,50],[591,1971,65],[634,2269,116],[605,2449,164],[254,2460,175],[518,2592,171],[452,2832,180],[595,3057,180],[438,3230,189],[678,3204,173],[608,3434,176],[625,3790,172],[405,3470,216],[292,3379,190],[436,3732,192],[453,4045,191],[441,4174,185],[293,4143,194],[181,3954,194],[0,3968,194],[9,4212,330],[121,4188,330],[261,4152,330],[231,3537,354],[340,3578,353],[876,3943,164],[754,3485,169],[795,4129,169],[937,4197,176],[1060,4059,176],[1100,4276,176],[1042,3928,164],[1058,3841,164],[1299,3836,67],[1266,3399,77],[1138,3523,65],[1084,3162,87],[783,3194,154],[1095,2995,88],[1252,2816,69],[1133,2789,71],[1299,3315,77],[1567,3342,77],[1482,3441,91],[1271,3431,213],[1269,3173,213],[1378,3193,77],[1475,3178,77],[1463,3004,96],[1654,3069,81],[1575,2945,104],[1652,2737,84],[1545,2512,79],[1529,2675,84],[1332,2681,79],[1068,2609,76],[998,2370,76],[931,2106,76],[862,1959,74],[791,1883,76],[1198,2485,80],[1225,2249,76],[1552,2355,84],[1906,2469,75],[2265,2682,73],[1892,2826,79],[1865,3134,72],[1831,3327,69],[2079,3395,73],[2345,3369,76],[2472,3147,76],[2425,2975,76],[2249,2875,74],[2170,3145,75],[2089,2661,62],[2074,2424,75],[1950,2261,92],[1618,2276,92],[1582,1986,92],[1734,1968,92],[1577,1790,92],[1436,2021,83],[1230,1781,73],[1388,2223,79],[1596,1553,96],[1683,1422,49],[1299,1569,76],[1017,1579,76],[1275,1460,76],[1338,1357,84],[1332,1209,140],[1157,1235,212],[1065,1225,212],[1076,1447,212],[924,1451,212],[911,1123,212],[1079,1103,212],[1173,1291,76],[1078,1289,76],[1003,1488,76],[951,1219,76],[951,1107,76],[1662,1123,29],[1378,934,36],[1196,1099,48],[1118,1112,76],[1642,1743,75],[1875,1731,65],[2129,1695,26],[1961,1573,32],[2003,1397,17],[2209,1598,15],[2256,1470,11],[2165,1135,4],[2042,1204,6],[2257,1109,11],[2338,1663,9],[2388,1796,9],[2284,1865,36],[2252,2010,92],[2413,2125,64],[2268,2176,66],[2478,1999,49],[2707,2186,78],[2725,2368,184],[2441,2383,248],[2457,2462,248],[2724,2471,248],[2721,2697,400],[2542,2705,520],[2418,2703,520],[2408,2465,520],[2703,2466,527],[2730,2783,520],[2529,2771,520],[2443,2697,248],[2575,2629,248],[2591,2505,248],[2592,2744,248],[2717,2745,248],[2714,2478,80],[2583,2477,80],[2557,2292,83],[2434,2684,80],[1144,1984,68],[1259,867,36],[338,3827,359],[238,3922,338],[415,4068,330],[2728,1869,15],[1200,1461,212],[2443,2501,80],[2238,2325,78],[108,3960,194],[72,4179,194],[1033,698,9],[1177,1448,76],[789,2029,76],[704,2046,76],[928,3824,164],[1269,3513,66],[1773,3413,70],[2444,2872,75],[2632,1683,8],[1622,3188,77],[966,2861,77],[1900,1143,244],[1989,911,244],[1850,906,244],[2562,2673,80],[1656,3193,213],[119,3286,186],[841,1138,62],[870,1138,259],[1703,1055,27],[1718,1056,259],[86,3431,184],[86,3448,390],[91,3541,351],[2537,2404,248],[2582,2384,248],[2539,2433,567],[2538,2470,520]],"edges":[[0,1],[0,8],[1,2],[1,10],[2,3],[3,4],[4,5],[5,6],[6,7],[8,9],[8,13],[8,15],[8,21],[8,22],[9,10],[9,11],[9,12],[9,13],[9,14],[10,12],[11,12],[11,13],[12,13],[14,17],[15,16],[16,17],[16,18],[16,154],[16,156],[18,21],[18,154],[18,155],[19,23],[19,24],[19,196],[20,29],[20,35],[20,38],[20,196],[21,23],[21,154],[21,155],[22,23],[22,24],[23,24],[24,25],[24,31],[24,34],[25,26],[25,31],[26,27],[26,31],[26,32],[27,28],[28,29],[28,30],[28,33],[28,35],[29,30],[29,35],[29,36],[29,38],[31,32],[31,34],[32,33],[32,34],[32,35],[32,196],[33,34],[33,35],[33,196],[36,37],[37,38],[37,41],[38,39],[38,213],[39,40],[40,41],[40,100],[41,42],[42,43],[42,199],[43,44],[44,45],[44,46],[45,46],[46,47],[46,48],[47,49],[48,49],[48,50],[48,77],[48,78],[48,79],[49,50],[49,53],[49,54],[50,51],[50,78],[51,52],[52,53],[52,55],[52,56],[52,66],[52,67],[53,54],[53,55],[53,78],[54,212],[55,56],[56,57],[56,68],[57,58],[57,68],[58,59],[59,194],[60,61],[60,194],[61,62],[62,63],[63,188],[63,189],[64,65],[64,188],[64,219],[65,187],[66,68],[66,72],[66,73],[66,200],[67,78],[68,69],[68,70],[69,71],[70,71],[70,72],[72,200],[73,74],[73,200],[74,201],[75,82],[75,201],[76,77],[76,201],[77,78],[77,79],[77,80],[77,89],[78,79],[79,80],[79,89],[80,81],[80,89],[80,95],[80,101],[81,96],[81,206],[82,83],[82,87],[83,84],[83,108],[84,85],[85,86],[86,211],[87,88],[88,89],[88,205],[89,90],[89,91],[90,91],[91,92],[92,93],[92,94],[92,106],[93,94],[93,102],[93,103],[94,95],[95,96],[96,97],[97,98],[97,102],[98,99],[99,100],[99,123],[99,128],[99,198],[100,185],[100,198],[101,102],[102,103],[102,123],[102,124],[102,185],[103,104],[103,117],[103,118],[103,119],[103,124],[104,105],[104,115],[104,117],[105,106],[105,113],[105,115],[105,116],[105,184],[105,193],[106,107],[106,113],[106,115],[107,108],[107,114],[108,109],[108,114],[108,202],[109,110],[110,111],[110,114],[111,112],[112,113],[112,203],[113,114],[113,115],[115,116],[116,117],[117,118],[118,119],[119,120],[119,121],[119,122],[120,124],[121,125],[121,127],[121,147],[122,123],[122,124],[123,125],[123,127],[123,185],[125,126],[125,127],[125,150],[126,143],[126,150],[126,151],[127,128],[127,129],[128,140],[129,130],[129,138],[129,197],[130,131],[131,132],[132,133],[132,191],[133,134],[133,137],[134,135],[135,136],[136,137],[136,214],[138,139],[138,197],[139,140],[139,141],[141,142],[142,146],[143,144],[143,215],[144,145],[144,186],[145,146],[145,186],[147,148],[148,149],[149,150],[149,152],[149,157],[150,151],[150,152],[150,153],[151,152],[151,155],[152,153],[152,157],[153,154],[153,155],[153,156],[153,157],[154,155],[157,158],[157,204],[158,159],[158,161],[158,163],[158,190],[159,160],[160,162],[161,162],[161,163],[161,164],[161,183],[162,163],[162,183],[163,164],[164,165],[164,183],[165,221],[166,167],[166,220],[166,221],[167,168],[167,176],[167,177],[167,178],[168,169],[168,178],[169,170],[170,171],[170,175],[171,172],[171,173],[172,223],[173,174],[173,223],[174,175],[176,177],[176,179],[177,178],[177,179],[179,180],[180,181],[181,182],[182,183],[182,210],[184,192],[184,210],[188,189],[194,195],[207,208],[207,216],[208,209],[212,217],[213,214],[215,216],[217,218],[218,219],[220,221],[220,222],[222,223]],"maps":[["Shipment",1435,1360],["Killhouse",1266,2433],["Showdown",2237,3696],["Vacant",3581,3026],["Bog",4211,2591],["Crash",2730,4276],["Backlot",3166,4623],["Strike",4829,4760],["Pipeline",3811,6949],["Overgrown",4729,5759]]};
+
+(function () {
+  const svgNS = "http://www.w3.org/2000/svg";
+  const U_PER_FT = 12;
+  const pts = DATA.pts, edges = DATA.edges;
+  // Rotate to landscape: screen x = engine y, screen y = engine x (a 90° rotation, not a mirror).
+  const W = 4276, H = 2730;
+  const toScreen = p => [p[1], p[0]];
+  const level = z => (z < 130 ? 1 : z < 440 ? 2 : 3);
+  const levelName = ["", "Street level", "Upper floor", "High rooftop"];
+  const ftIn = u => { const t = Math.round(u); const f = Math.floor(t / 12), i = t % 12; return i ? `${f}′${i}″` : `${f}′`; };
+  const fmtFt = u => `${Math.round(u / U_PER_FT).toLocaleString()} ft`;
+  const fmtM = u => `${(u * 0.0254).toFixed(1)} m`;
+
+  const PAD_X = 320, PAD_Y = 260;
+  const base = { x: -PAD_X, y: -PAD_Y, w: W + PAD_X * 2, h: H + PAD_Y * 2 };
+  const map = document.getElementById("map");
+  map.setAttribute("viewBox", `${base.x} ${base.y} ${base.w} ${base.h}`);
+
+  const el = (tag, attrs, parent) => {
+    const n = document.createElementNS(svgNS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+
+  // Grid: 10 ft minor, 50 ft major, aligned to the map's origin.
+  const gGrid = el("g", {}, map);
+  const step = 10 * U_PER_FT;
+  const gx0 = Math.floor(base.x / step) * step, gx1 = base.x + base.w;
+  const gy0 = Math.floor(base.y / step) * step, gy1 = base.y + base.h;
+  for (let x = gx0; x <= gx1; x += step) {
+    const major = Math.round(x / step) % 5 === 0;
+    el("line", { x1: x, y1: base.y, x2: x, y2: gy1, stroke: major ? "var(--grid-major)" : "var(--grid)", "stroke-width": major ? 1 : 0.6, "vector-effect": "non-scaling-stroke", class: major ? "g-major" : "g-minor" }, gGrid);
+  }
+  for (let y = gy0; y <= gy1; y += step) {
+    const major = Math.round(y / step) % 5 === 0;
+    el("line", { x1: base.x, y1: y, x2: gx1, y2: y, stroke: major ? "var(--grid-major)" : "var(--grid)", "stroke-width": major ? 1 : 0.6, "vector-effect": "non-scaling-stroke", class: major ? "g-major" : "g-minor" }, gGrid);
+  }
+
+  // Comparison overlays, centred on the map extents, long side horizontal.
+  const cx = W / 2, cy = H / 2;
+  const overlays = {
+    soccer: { w: 105 / 0.0254, h: 68 / 0.0254, label: "Pro soccer pitch · 105 × 68 m" },
+    football: { w: 360 * 12, h: 160 * 12, label: "NFL field with end zones · 360 × 160 ft" },
+    ship: { w: 1435, h: 1360, label: "Shipment · 120 × 113 ft" }
+  };
+  const gOv = el("g", {}, map);
+  const ovNodes = {};
+  for (const k in overlays) {
+    const o = overlays[k];
+    const g = el("g", { "data-ov": k }, gOv);
+    el("rect", { x: cx - o.w / 2, y: cy - o.h / 2, width: o.w, height: o.h, fill: "none", stroke: "var(--ink-2)", "stroke-width": 1.5, "stroke-dasharray": "6 5", "vector-effect": "non-scaling-stroke" }, g);
+    const t = el("text", { x: cx - o.w / 2 + 30, y: cy - o.h / 2 - 34, fill: "var(--ink-2)", "font-family": "IBM Plex Mono, ui-monospace, monospace", "font-size": 82 }, g);
+    t.textContent = o.label;
+    ovNodes[k] = g;
+    o.text = t;
+  }
+
+  // Walkable links.
+  const gEdges = el("g", {}, map);
+  for (const [a, b] of edges) {
+    const [x1, y1] = toScreen(pts[a]), [x2, y2] = toScreen(pts[b]);
+    el("line", { x1, y1, x2, y2, stroke: "var(--edge)", "stroke-width": 1.1, "vector-effect": "non-scaling-stroke" }, gEdges);
+  }
+
+  // Standing spots, lowest first so rooftops draw on top.
+  const gNodes = el("g", {}, map);
+  const gHits = el("g", {}, map);
+  const order = pts.map((p, i) => i).sort((i, j) => pts[i][2] - pts[j][2]);
+  const nodeEls = [];
+  for (const i of order) {
+    const p = pts[i], [x, y] = toScreen(p), lv = level(p[2]);
+    const c = el("circle", { cx: x, cy: y, r: 22, fill: `var(--lvl-${lv})`, stroke: "var(--panel)", "stroke-width": 1, "vector-effect": "non-scaling-stroke" }, gNodes);
+    const h = el("circle", { cx: x, cy: y, r: 60, fill: "transparent" }, gHits);
+    h.dataset.i = i;
+    nodeEls.push([c, h]);
+  }
+
+  // Player: a 30 × 30 unit hull, drawn at true size, with a halo so it can be found at full zoom-out.
+  const gPlayer = el("g", { "pointer-events": "none" }, map);
+  const halo = el("circle", { r: 120, fill: "var(--accent-soft)", stroke: "var(--accent)", "stroke-width": 1.2, "vector-effect": "non-scaling-stroke" }, gPlayer);
+  const hull = el("rect", { width: 30, height: 30, x: -15, y: -15, fill: "var(--accent)" }, gPlayer);
+  const pLabel = el("text", { fill: "var(--accent)", "font-family": "IBM Plex Mono, ui-monospace, monospace", "font-weight": 500, "font-size": 80 }, gPlayer);
+  pLabel.textContent = "player";
+
+  const centre = toScreen([1400, 2170]); // start near the centre of the map
+  let player = { x: centre[0], y: centre[1] };
+  let zoom = 1;
+
+  const readout = document.getElementById("readout");
+  function nearest() {
+    let best = null, bd = Infinity;
+    for (const p of pts) { const [x, y] = toScreen(p); const d = Math.hypot(x - player.x, y - player.y); if (d < bd) { bd = d; best = p; } }
+    return { p: best, d: bd };
+  }
+  function updateReadout() {
+    const fromW = player.x, fromE = W - player.x, fromN = player.y, fromS = H - player.y;
+    const n = nearest();
+    readout.innerHTML =
+      `<div>To left edge <span>·</span> ${fmtFt(Math.max(0, fromW))}</div>` +
+      `<div>To right edge <span>·</span> ${fmtFt(Math.max(0, fromE))}</div>` +
+      `<div>To top edge <span>·</span> ${fmtFt(Math.max(0, fromN))}</div>` +
+      `<div>To bottom edge <span>·</span> ${fmtFt(Math.max(0, fromS))}</div>` +
+      `<div>Nearest standing spot <span>·</span> ${fmtFt(n.d)}</div>`;
+  }
+
+  function placePlayer() {
+    gPlayer.setAttribute("transform", `translate(${player.x} ${player.y})`);
+    updateReadout();
+  }
+
+  const box = document.getElementById("mapBox");
+  const sbBar = document.getElementById("sbBar"), sbTxt = document.getElementById("sbTxt");
+  let vb = { ...base };
+  function setView() {
+    const w = base.w / zoom, h = base.h / zoom;
+    let x = zoom === 1 ? base.x : player.x - w / 2;
+    let y = zoom === 1 ? base.y : player.y - h / 2;
+    vb = { x, y, w, h };
+    map.setAttribute("viewBox", `${x} ${y} ${w} ${h}`);
+    // Keep marks readable at every zoom: shrink dots and labels as the view tightens.
+    const s = 1 / Math.sqrt(zoom);
+    for (const [c, h2] of nodeEls) { c.setAttribute("r", 22 * s); h2.setAttribute("r", 60 * s); }
+    halo.setAttribute("r", zoom >= 16 ? 0 : 120 / zoom);
+    pLabel.setAttribute("font-size", 80 / zoom);
+    pLabel.setAttribute("x", (zoom >= 16 ? 24 : 140 / zoom));
+    pLabel.setAttribute("y", (zoom >= 16 ? -24 : -60 / zoom));
+    for (const k in overlays) { const o = overlays[k]; o.text.setAttribute("font-size", 82 / zoom); o.text.setAttribute("y", cy - o.h / 2 - 34 / zoom); o.text.setAttribute("x", cx - o.w / 2 + 30 / zoom); }
+    for (const g of gGrid.querySelectorAll(".g-minor")) g.style.display = zoom === 1 ? "none" : "";
+    updateScalebar();
+  }
+  function updateScalebar() {
+    const pxPerUnit = map.getBoundingClientRect().width / vb.w;
+    const choices = [5, 10, 25, 50, 100];
+    const targetPx = 120;
+    let ft = choices[0];
+    for (const c of choices) if (c * U_PER_FT * pxPerUnit <= targetPx * 1.4) ft = c;
+    sbBar.style.width = `${ft * U_PER_FT * pxPerUnit}px`;
+    sbTxt.textContent = `${ft} ft · ${(ft * 0.3048).toFixed(ft < 10 ? 1 : 0)} m`;
+  }
+
+  function svgPoint(evt) {
+    const pt = map.createSVGPoint();
+    pt.x = evt.clientX; pt.y = evt.clientY;
+    return pt.matrixTransform(map.getScreenCTM().inverse());
+  }
+  map.addEventListener("click", evt => {
+    const p = svgPoint(evt);
+    player = { x: Math.min(Math.max(p.x, 0), W), y: Math.min(Math.max(p.y, 0), H) };
+    placePlayer();
+    if (zoom !== 1) setView();
+  });
+  map.addEventListener("keydown", evt => {
+    const stepU = 5 * U_PER_FT / Math.max(1, zoom / 4);
+    const moves = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    const m = moves[evt.key];
+    if (!m) return;
+    evt.preventDefault();
+    player = { x: Math.min(Math.max(player.x + m[0] * stepU, 0), W), y: Math.min(Math.max(player.y + m[1] * stepU, 0), H) };
+    placePlayer();
+    if (zoom !== 1) setView();
+  });
+
+  // Hover tooltip on standing spots.
+  const tip = document.getElementById("tip");
+  gHits.addEventListener("pointermove", evt => {
+    const i = evt.target.dataset && evt.target.dataset.i;
+    if (i === undefined) return;
+    const p = pts[+i];
+    const r = box.getBoundingClientRect();
+    tip.innerHTML = `<b>${levelName[level(p[2])]}</b> · ${ftIn(p[2])} above the lowest street`;
+    tip.style.left = `${evt.clientX - r.left}px`;
+    tip.style.top = `${evt.clientY - r.top}px`;
+    tip.hidden = false;
+  });
+  gHits.addEventListener("pointerleave", () => { tip.hidden = true; });
+
+  document.querySelectorAll("[data-zoom]").forEach(b => b.addEventListener("click", () => {
+    zoom = +b.dataset.zoom;
+    document.querySelectorAll("[data-zoom]").forEach(o => o.setAttribute("aria-pressed", String(o === b)));
+    setView();
+  }));
+  const ovState = { soccer: true, football: false, ship: false };
+  function applyOverlays() { for (const k in ovNodes) ovNodes[k].style.display = ovState[k] ? "" : "none"; }
+  document.querySelectorAll("[data-ov]").forEach(b => {
+    if (b.tagName !== "BUTTON") return;
+    b.addEventListener("click", () => {
+      const k = b.dataset.ov; ovState[k] = !ovState[k];
+      b.setAttribute("aria-pressed", String(ovState[k]));
+      applyOverlays();
+    });
+  });
+  applyOverlays();
+  placePlayer();
+  setView();
+  window.addEventListener("resize", updateScalebar);
+
+  // Elevation: units on both axes, so the player and the buildings share one scale.
+  const elev = document.getElementById("elev");
+  const EW = 1500, EH = 700, ox = 150, gy = 630; // ground line in svg units
+  elev.setAttribute("viewBox", `0 0 ${EW} ${EH}`);
+  const E = (t, a, p = elev) => el(t, a, p);
+  // Height axis every 10 ft.
+  for (let ft = 0; ft <= 50; ft += 10) {
+    const y = gy - ft * U_PER_FT;
+    E("line", { x1: ox, y1: y, x2: EW - 20, y2: y, stroke: ft === 0 ? "var(--ink)" : "var(--grid-major)", "stroke-width": ft === 0 ? 2 : 1 });
+    const t = E("text", { x: ox - 14, y: y + 9, "text-anchor": "end", fill: "var(--muted)", "font-family": "IBM Plex Mono, ui-monospace, monospace", "font-size": 26 });
+    t.textContent = `${ft} ft`;
+  }
+  // Building massing: street, one upper floor, the high rooftop.
+  const bx = 560;
+  E("rect", { x: bx, y: gy - 136, width: 300, height: 136, fill: "var(--lvl-2)", opacity: 0.28 });
+  E("line", { x1: bx, y1: gy - 136, x2: bx + 300, y2: gy - 136, stroke: "var(--lvl-2)", "stroke-width": 4 });
+  const t1 = E("text", { x: bx + 12, y: gy - 148, fill: "var(--ink-2)", "font-family": "IBM Plex Sans, system-ui, sans-serif", "font-size": 26 });
+  t1.textContent = "Upper floor · ≈ 11 ft";
+  const rx = 1000;
+  E("rect", { x: rx, y: gy - 487, width: 330, height: 487, fill: "var(--lvl-3)", opacity: 0.22 });
+  E("line", { x1: rx, y1: gy - 487, x2: rx + 330, y2: gy - 487, stroke: "var(--lvl-3)", "stroke-width": 4 });
+  const t2 = E("text", { x: rx + 12, y: gy - 500, fill: "var(--ink-2)", "font-family": "IBM Plex Sans, system-ui, sans-serif", "font-size": 26 });
+  t2.textContent = "Highest rooftop · ≈ 40 ft";
+  // Stack of player outlines against the rooftop: 487 / 70 ≈ 7.
+  for (let k = 0; k < 7; k++) {
+    E("rect", { x: rx + 270, y: gy - 70 * (k + 1), width: 30, height: 70, fill: "none", stroke: "var(--accent)", "stroke-width": 2, "stroke-dasharray": k ? "5 4" : "none" });
+  }
+  const t3 = E("text", { x: rx + 312, y: gy - 230, fill: "var(--accent)", "font-family": "IBM Plex Mono, ui-monospace, monospace", "font-size": 24, transform: `rotate(-90 ${rx + 312} ${gy - 230})`, "text-anchor": "middle" });
+  t3.textContent = "≈ 7 players";
+  // The player, true size, with eye height and jump height.
+  const px = 300;
+  const fig = E("g", {});
+  E("rect", { x: px - 15, y: gy - 70, width: 30, height: 70, fill: "var(--accent-soft)", stroke: "var(--accent)", "stroke-width": 2 }, fig);
+  E("circle", { cx: px, cy: gy - 63, r: 7, fill: "var(--accent)" }, fig);
+  E("rect", { x: px - 8, y: gy - 55, width: 16, height: 30, rx: 5, fill: "var(--accent)" }, fig);
+  E("rect", { x: px - 7, y: gy - 26, width: 5.5, height: 26, rx: 2.5, fill: "var(--accent)" }, fig);
+  E("rect", { x: px + 1.5, y: gy - 26, width: 5.5, height: 26, rx: 2.5, fill: "var(--accent)" }, fig);
+  E("line", { x1: px - 22, y1: gy - 60, x2: px + 70, y2: gy - 60, stroke: "var(--ink-2)", "stroke-width": 1.5, "stroke-dasharray": "4 4" });
+  const t4 = E("text", { x: px + 78, y: gy - 54, fill: "var(--ink-2)", "font-family": "IBM Plex Mono, ui-monospace, monospace", "font-size": 22 });
+  t4.textContent = "eyes 5′0″";
+  E("path", { d: `M ${px - 120} ${gy} Q ${px - 80} ${gy - 78} ${px - 40} ${gy}`, fill: "none", stroke: "var(--ink-2)", "stroke-width": 1.5, "stroke-dasharray": "4 4" });
+  E("line", { x1: px - 130, y1: gy - 39, x2: px - 30, y2: gy - 39, stroke: "var(--ink-2)", "stroke-width": 1 });
+  const t5 = E("text", { x: px - 80, y: gy - 50, "text-anchor": "middle", fill: "var(--ink-2)", "font-family": "IBM Plex Mono, ui-monospace, monospace", "font-size": 22 });
+  t5.textContent = "jump 3′3″";
+  const t6 = E("text", { x: px - 15, y: gy - 92, fill: "var(--accent)", "font-family": "IBM Plex Mono, ui-monospace, monospace", "font-size": 24, "font-weight": 500 });
+  t6.textContent = "5′10″";
+
+  // Lineup of CoD4 map footprints at one shared scale, long side horizontal.
+  const lineup = document.getElementById("lineup");
+  const K = 0.034; // px per unit
+  const refs = DATA.maps.map(([name, a, b]) => ({ name, long: Math.max(a, b), short: Math.min(a, b) }));
+  refs.push({ name: "Soccer pitch", long: 105 / 0.0254, short: 68 / 0.0254, ref: true });
+  for (const m of refs) {
+    const fig = document.createElement("figure");
+    if (m.name === "Crash") fig.className = "is-crash";
+    const w = m.long * K, h = m.short * K;
+    const s = el("svg", { width: w.toFixed(1), height: h.toFixed(1), viewBox: `0 0 ${w} ${h}`, role: "img", "aria-label": `${m.name}, ${fmtFt(m.long)} by ${fmtFt(m.short)}` });
+    const isCrash = m.name === "Crash";
+    el("rect", {
+      x: 1, y: 1, width: Math.max(0, w - 2), height: Math.max(0, h - 2), rx: 2,
+      fill: isCrash ? "var(--accent-soft)" : m.ref ? "none" : "var(--panel)",
+      stroke: isCrash ? "var(--accent)" : "var(--ink-2)",
+      "stroke-width": isCrash ? 2 : 1.2,
+      "stroke-dasharray": m.ref ? "5 4" : "none"
+    }, s);
+    const cap = document.createElement("figcaption");
+    cap.innerHTML = `<b>${m.name}</b><span class="num">${fmtFt(m.long).replace(" ft", "")} × ${fmtFt(m.short)}</span>`;
+    fig.title = `${m.name}: ${fmtFt(m.long)} × ${fmtFt(m.short)} (${fmtM(m.long)} × ${fmtM(m.short)})`;
+    fig.append(s, cap);
+    lineup.appendChild(fig);
+  }
+})();
+</script>
